@@ -3,15 +3,56 @@
   var dom = Object()
   
   dom.Element = function(tagName) {
+    
+    // make sure a DOM element is available at `this.element'
     if (tagName instanceof window.Element) {
+      // to use the given DOM element instead of creating a new one
       this.element = tagName
     } else {
       this.element = document.createElement(tagName)
     }
     this.element.bcwebDomElement = this
+    
+    this.eventHandlers = {}
+    
+    this.children = []
+    
   }
   
   dom.Element.prototype = {
+    propagate: function() {
+      var eventName = arguments[0]
+      var alteredArguments = arguments
+      if (eventName in this.eventHandlers) {
+        var result = this.trigger.apply(this, arguments)
+        if (result === undefined) {
+        } else if (result === null) {
+          return
+        } else {
+          alteredArguments = result
+        }
+      }
+      for (var i in this.children) {
+        this.children[i].propagate.apply(this.children[i], alteredArguments)
+      }
+    },
+    registerEventHandler: function(eventName, func) {
+      this.eventHandlers[eventName] = func
+    },
+    trigger: function(eventName) {
+      var func = undefined
+      if (eventName in this.eventHandlers) {
+        func = this.eventHandlers[eventName]
+      } else {
+        var funcName = 'defaultEventHandlerFor' + eventName
+        if (funcName in this) {
+          func = this[funcName]
+        }
+      }
+      if (func) {
+        return func.apply(this, arguments)
+      }
+    },
     getStyle: function(k) {
       return window.getComputedStyle(this.element)[k]
     },
@@ -110,9 +151,6 @@
     },
     append: function(child) {
       this.element.appendChild(child.element)
-      if (this.children === undefined) {
-        this.children = []
-      }
       this.children.push(child)
       return this
     },
@@ -131,9 +169,6 @@
     },
     
     getChildren: function() {
-      if (this.children === undefined) {
-        return []
-      }
       return this.children
     },
     

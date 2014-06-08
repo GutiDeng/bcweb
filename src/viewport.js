@@ -20,11 +20,12 @@
   }
   
   viewport.prepare = function() {
-    this.documentBody = new bcweb.dom.Element(document.body).setStyle({
+    var documentBody = new bcweb.dom.Element(document.body).setStyle({
       'margin': '0',
       'padding': '0',
       'font-family': '"Helvetica Neue",Helvetica,Arial,sans-serif'
     })
+    this.documentBody = documentBody
     
     // create a div as the container of the app
     this.appContainer = new bcweb.dom.Element('div').setStyle({
@@ -44,6 +45,11 @@
       screenWidth: screen.width,
       screenHeight: screen.height
     }
+    
+    window.onresize = function() {
+      documentBody.propagate('Resize')
+    }
+    
     console.log(this.dimensions)
   }
   
